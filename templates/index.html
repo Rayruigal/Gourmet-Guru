@@ -3,26 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gourmet Guru</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Recipe Generator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        #recipeContainer {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #recipeForm {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #recipeForm input[type="text"],
+        #recipeForm button {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        #recipeForm button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #recipeForm button:hover {
+            background-color: #45a049;
+        }
+
+        #recipeResult {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            font-size: 18px;
+            overflow-wrap: break-word;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Gourmet Guru</h1>
+    <div id="recipeContainer">
+        <h1>Gourmet Guru - Recipe Generator</h1>
         <form id="recipeForm">
-            <label for="ingredients">Ingredients (comma separated):</label>
-            <input type="text" id="ingredients" name="ingredients" required>
-            <label for="cuisine">Cuisine Type:</label>
-            <select id="cuisine" name="cuisine" required>
-                <option value="Italian">Italian</option>
-                <option value="Chinese">Chinese</option>
-                <option value="Indian">Indian</option>
-                <!-- Add more cuisine types as needed -->
-            </select>
-            <button type="submit">Generate Recipe</button>
+            <label for="ingredients">Ingredients:</label><br>
+            <input type="text" id="ingredients" name="ingredients" placeholder="Enter ingredients separated by commas" required><br><br>
+            
+            <label for="cuisine">Cuisine Type:</label><br>
+            <input type="text" id="cuisine" name="cuisine" placeholder="Enter cuisine type (e.g., Italian, Chinese, Indian)" required><br><br>
+            
+            <button type="button" onclick="generateRecipe()">Generate Recipe</button>
         </form>
         <div id="recipeResult"></div>
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <script>
+        function generateRecipe() {
+            const ingredients = document.getElementById('ingredients').value.split(',');
+            const cuisine = document.getElementById('cuisine').value;
+
+            const formData = {
+                ingredients: ingredients,
+                cuisine: cuisine
+            };
+
+            fetch('/generate_recipe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('recipeResult').innerText = `Error: ${data.error}`;
+                } else {
+                    document.getElementById('recipeResult').innerHTML = `<strong>Generated Recipe:</strong><br>${data.recipe}`;
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                document.getElementById('recipeResult').innerText = `Error: ${error.message}`;
+            });
+        }
+    </script>
 </body>
 </html>
