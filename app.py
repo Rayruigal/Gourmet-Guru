@@ -22,6 +22,7 @@ def index():
     # return render_template('index_2.html') # input ingredients, and Cuisine Type as a free choice
     # return render_template('index_3.html') # input ingredients, and Cuisine Type as a free choice, centerlize the box
     # return render_template('index_4.html') # enable upload a photo in the end
+    # return render_template('index_5.html') # display the uploaded photo on the URL
     return render_template('index.html') # display the uploaded photo on the URL
 
 
@@ -65,19 +66,34 @@ def generate_recipe():
 
 @app.route('/upload_photo', methods=['POST'])
 def upload_photo():
-    photo = request.files.get('photo')
+    if 'photo' not in request.files:
+        return jsonify({'error': 'No photo part in the request'}), 400
+    file = request.files['photo']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filepath)
+        photo_url = f"/uploads/{file.filename}"
+        return jsonify({'photo_url': photo_url})
+    return jsonify({'error': 'File upload failed'}), 500
 
-    if photo:
-        photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
-        photo.save(photo_path)
-        photo_url = f"/uploads/{photo.filename}"
-        return jsonify({'success': 'Photo uploaded successfully!', 'photo_url': photo_url})
-    else:
-        return jsonify({'error': 'No photo uploaded.'}), 400
-    
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/rate_recipe', methods=['POST'])
+def rate_recipe():
+    data = request.get_json()
+    rating = data.get('rating')
+    
+    if rating not in [1, 2, 3, 4, 5]:
+        return jsonify({'error': 'Invalid rating. Must be between 1 and 5.'}), 400
+    
+    # Here, you could save the rating to a database or perform other actions
+    print(f'Received rating: {rating}')
+    
+    return jsonify({'message': 'Rating received successfully!'})
 
 
 def generate_dummy_recipe(ingredients, cuisine):

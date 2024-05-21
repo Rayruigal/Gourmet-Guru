@@ -29,7 +29,7 @@
             color: #333;
         }
 
-        #recipeForm, #photoForm {
+        #recipeForm, #photoForm, #ratingForm {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -38,7 +38,8 @@
         #recipeForm input[type="text"],
         #recipeForm button,
         #photoForm input[type="file"],
-        #photoForm button {
+        #photoForm button,
+        #ratingForm button {
             width: 100%;
             max-width: 400px;
             padding: 10px;
@@ -49,7 +50,8 @@
         }
 
         #recipeForm button,
-        #photoForm button {
+        #photoForm button,
+        #ratingForm button {
             background-color: #4CAF50;
             color: white;
             cursor: pointer;
@@ -57,7 +59,8 @@
         }
 
         #recipeForm button:hover,
-        #photoForm button:hover {
+        #photoForm button:hover,
+        #ratingForm button:hover {
             background-color: #45a049;
         }
 
@@ -80,6 +83,29 @@
             max-height: 200px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #ratingContainer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .ratingButton {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .ratingButton:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -104,6 +130,16 @@
         </form>
         
         <div id="photoContainer"></div>
+        <button id="readRecipeButton" style="display: none;" onclick="readRecipe()">Read Recipe Aloud</button>
+        
+        <div id="ratingContainer" style="display: none;">
+            <button class="ratingButton" onclick="rateRecipe(1)">1</button>
+            <button class="ratingButton" onclick="rateRecipe(2)">2</button>
+            <button class="ratingButton" onclick="rateRecipe(3)">3</button>
+            <button class="ratingButton" onclick="rateRecipe(4)">4</button>
+            <button class="ratingButton" onclick="rateRecipe(5)">5</button>
+        </div>
+        <div id="ratingResult"></div>
     </div>
 
     <script>
@@ -127,6 +163,8 @@
                 } else {
                     document.getElementById('recipeResult').innerHTML = `<strong>Generated Recipe:</strong><br>${data.recipe}`;
                     document.getElementById('photoForm').style.display = 'block';
+                    document.getElementById('readRecipeButton').style.display = 'block';
+                    document.getElementById('ratingContainer').style.display = 'flex';
                 }
             })
             .catch((error) => {
@@ -164,6 +202,34 @@
             } else {
                 alert('Please select a photo to upload.');
             }
+        }
+
+        function readRecipe() {
+            const recipeText = document.getElementById('recipeResult').innerText;
+            const utterance = new SpeechSynthesisUtterance(recipeText);
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function rateRecipe(rating) {
+            fetch('/rate_recipe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ rating }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('ratingResult').innerText = `Error: ${data.error}`;
+                } else {
+                    document.getElementById('ratingResult').innerText = `Rating submitted: ${rating}`;
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                document.getElementById('ratingResult').innerText = `Error: ${error.message}`;
+            });
         }
     </script>
 </body>
