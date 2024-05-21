@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 # from transformers import AutoTokenizer, AutoModelForCausalLM
 # from transformers import AutoTokenizer, AutoModelWithLMHead
 # import torch
@@ -18,7 +18,12 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # return render_template('index_1.html') # input ingredients, select Cuisine Type
+    # return render_template('index_2.html') # input ingredients, and Cuisine Type as a free choice
+    # return render_template('index_3.html') # input ingredients, and Cuisine Type as a free choice, centerlize the box
+    # return render_template('index_4.html') # enable upload a photo in the end
+    return render_template('index.html') # display the uploaded photo on the URL
+
 
 @app.route('/generate_recipe', methods=['POST'])
 def generate_recipe():
@@ -65,9 +70,14 @@ def upload_photo():
     if photo:
         photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
         photo.save(photo_path)
-        return jsonify({'success': 'Photo uploaded successfully!'})
+        photo_url = f"/uploads/{photo.filename}"
+        return jsonify({'success': 'Photo uploaded successfully!', 'photo_url': photo_url})
     else:
         return jsonify({'error': 'No photo uploaded.'}), 400
+    
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 def generate_dummy_recipe(ingredients, cuisine):

@@ -70,6 +70,17 @@
             font-size: 18px;
             overflow-wrap: break-word;
         }
+
+        #photoContainer {
+            margin-top: 20px;
+        }
+
+        #photoContainer img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -91,6 +102,8 @@
             <input type="file" id="photo" name="photo" accept="image/*"><br><br>
             <button type="button" onclick="uploadPhoto()">Upload Photo</button>
         </form>
+        
+        <div id="photoContainer"></div>
     </div>
 
     <script>
@@ -138,6 +151,10 @@
                         alert(`Error: ${data.error}`);
                     } else {
                         alert('Photo uploaded successfully!');
+                        const photoContainer = document.getElementById('photoContainer');
+                        const img = document.createElement('img');
+                        img.src = data.photo_url;
+                        photoContainer.appendChild(img);
                     }
                 })
                 .catch((error) => {
