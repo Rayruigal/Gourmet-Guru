@@ -1,7 +1,15 @@
 from flask import Flask, request, jsonify, render_template
-import json
+# from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelWithLMHead
+import torch
 
 app = Flask(__name__)
+
+# Load the LLaMA3 model and tokenizer
+# tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-neo-2.7B')
+# model = AutoModelForCausalLM.from_pretrained('EleutherAI/gpt-neo-2.7B')
+tokenizer = AutoTokenizer.from_pretrained('gpt2')
+model = AutoModelWithLMHead.from_pretrained('gpt2')
 
 @app.route('/')
 def index():
@@ -14,19 +22,32 @@ def generate_recipe():
     ingredients = data.get('ingredients', [])
     cuisine = data.get('cuisine', 'Italian')  # Default cuisine is Italian
 
-    print(ingredients)
-    print(cuisine)
-
-    # Here you would fetch the recipe based on the ingredients and cuisine
-    # For now, let's just return a dummy recipe
-    recipe = generate_dummy_recipe(ingredients, cuisine)
+    # # Here you would fetch the recipe based on the ingredients and cuisine
+    # # For now, let's just return a dummy recipe
+    # recipe = generate_dummy_recipe(ingredients, cuisine)
 
 
-    json_recipe = dict()
-    json_recipe['recipe'] = recipe['instructions']
+    # json_recipe = dict()
+    # json_recipe['recipe'] = recipe['instructions']
 
 
-    return json_recipe
+    # return json_recipe
+    print('Running....')
+
+    if not ingredients or not cuisine:
+        return jsonify({'error': 'Ingredients and cuisine type are required.'}), 400
+
+    prompt = f"Create a {cuisine} recipe using the following ingredients: {', '.join(ingredients)}."
+
+    try:
+        inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
+        outputs = model.generate(inputs['input_ids'], max_length=200, num_return_sequences=1)
+
+        recipe = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+        return jsonify({'recipe': recipe})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 def generate_dummy_recipe(ingredients, cuisine):
