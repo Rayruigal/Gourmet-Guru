@@ -1,6 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
+import json
 
 app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/generate_recipe', methods=['POST'])
 def generate_recipe():
@@ -9,11 +14,20 @@ def generate_recipe():
     ingredients = data.get('ingredients', [])
     cuisine = data.get('cuisine', 'Italian')  # Default cuisine is Italian
 
+    print(ingredients)
+    print(cuisine)
+
     # Here you would fetch the recipe based on the ingredients and cuisine
     # For now, let's just return a dummy recipe
     recipe = generate_dummy_recipe(ingredients, cuisine)
 
-    return jsonify(recipe)
+
+    json_recipe = dict()
+    json_recipe['recipe'] = recipe['instructions']
+
+
+    return json_recipe
+
 
 def generate_dummy_recipe(ingredients, cuisine):
     # Dummy function to generate a recipe
@@ -41,6 +55,8 @@ def generate_dummy_recipe(ingredients, cuisine):
             'ingredients': [],
             'instructions': 'No recipe found for the selected cuisine.'
         }
+
+    
 
     return recipe
 
