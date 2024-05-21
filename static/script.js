@@ -1,7 +1,8 @@
 document.getElementById('recipeForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    const ingredients = document.getElementById('ingredients').value.split(',').map(item => item.trim());
+    const ingredientsInput = document.getElementById('ingredients').value;
+    const ingredients = ingredientsInput.split(',').map(item => item.trim());
     const cuisine = document.getElementById('cuisine').value;
 
     fetch('/generate_recipe', {
@@ -16,10 +17,11 @@ document.getElementById('recipeForm').addEventListener('submit', function(event)
     })
     .then(response => response.json())
     .then(data => {
+        const resultDiv = document.getElementById('recipeResult');
         if (data.recipe) {
-            document.getElementById('recipeResult').innerText = data.recipe;
+            resultDiv.innerText = data.recipe;
         } else {
-            document.getElementById('recipeResult').innerText = 'Error: ' + data.error;
+            resultDiv.innerText = 'Error: ' + data.error;
         }
     })
     .catch(error => {
