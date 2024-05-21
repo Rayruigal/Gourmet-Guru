@@ -1,15 +1,20 @@
 from flask import Flask, request, jsonify, render_template
 # from transformers import AutoTokenizer, AutoModelForCausalLM
-from transformers import AutoTokenizer, AutoModelWithLMHead
-import torch
+# from transformers import AutoTokenizer, AutoModelWithLMHead
+# import torch
+import os
 
 app = Flask(__name__)
+
+app.config['UPLOAD_FOLDER'] = 'uploads/'
+# Ensure the upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Load the LLaMA3 model and tokenizer
 # tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-neo-2.7B')
 # model = AutoModelForCausalLM.from_pretrained('EleutherAI/gpt-neo-2.7B')
-tokenizer = AutoTokenizer.from_pretrained('gpt2')
-model = AutoModelWithLMHead.from_pretrained('gpt2')
+# # tokenizer = AutoTokenizer.from_pretrained('gpt2')
+# # model = AutoModelWithLMHead.from_pretrained('gpt2')
 
 @app.route('/')
 def index():
@@ -22,32 +27,47 @@ def generate_recipe():
     ingredients = data.get('ingredients', [])
     cuisine = data.get('cuisine', 'Italian')  # Default cuisine is Italian
 
-    # # Here you would fetch the recipe based on the ingredients and cuisine
-    # # For now, let's just return a dummy recipe
-    # recipe = generate_dummy_recipe(ingredients, cuisine)
+    # Here you would fetch the recipe based on the ingredients and cuisine
+    # For now, let's just return a dummy recipe
+    recipe = generate_dummy_recipe(ingredients, cuisine)
 
 
-    # json_recipe = dict()
-    # json_recipe['recipe'] = recipe['instructions']
+    json_recipe = dict()
+    json_recipe['recipe'] = recipe['instructions']
+
+    return json_recipe
 
 
-    # return json_recipe
-    print('Running....')
 
-    if not ingredients or not cuisine:
-        return jsonify({'error': 'Ingredients and cuisine type are required.'}), 400
+    # print('Running....')
 
-    prompt = f"Create a {cuisine} recipe using the following ingredients: {', '.join(ingredients)}."
+    # if not ingredients or not cuisine:
+    #     return jsonify({'error': 'Ingredients and cuisine type are required.'}), 400
 
-    try:
-        inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
-        outputs = model.generate(inputs['input_ids'], max_length=200, num_return_sequences=1)
+    # prompt = f"Create a {cuisine} recipe using the following ingredients: {', '.join(ingredients)}."
+    # print(prompt)
 
-        recipe = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
-        return jsonify({'recipe': recipe})
+    # try:
+    #     inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
+    #     outputs = model.generate(inputs['input_ids'], max_length=200, num_return_sequences=1)
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    #     recipe = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+    #     print(recipe)
+    #     return jsonify({'recipe': recipe})
+
+    # except Exception as e:
+    #     return jsonify({'error': str(e)}), 500
+
+@app.route('/upload_photo', methods=['POST'])
+def upload_photo():
+    photo = request.files.get('photo')
+
+    if photo:
+        photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+        photo.save(photo_path)
+        return jsonify({'success': 'Photo uploaded successfully!'})
+    else:
+        return jsonify({'error': 'No photo uploaded.'}), 400
 
 
 def generate_dummy_recipe(ingredients, cuisine):

@@ -29,14 +29,16 @@
             color: #333;
         }
 
-        #recipeForm {
+        #recipeForm, #photoForm {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
         #recipeForm input[type="text"],
-        #recipeForm button {
+        #recipeForm button,
+        #photoForm input[type="file"],
+        #photoForm button {
             width: 100%;
             max-width: 400px;
             padding: 10px;
@@ -46,14 +48,16 @@
             font-size: 16px;
         }
 
-        #recipeForm button {
+        #recipeForm button,
+        #photoForm button {
             background-color: #4CAF50;
             color: white;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
 
-        #recipeForm button:hover {
+        #recipeForm button:hover,
+        #photoForm button:hover {
             background-color: #45a049;
         }
 
@@ -70,7 +74,7 @@
 </head>
 <body>
     <div id="recipeContainer">
-        <h1>Gourmet Guru - Recipe Generator</h1>
+        <h1>Recipe Generator</h1>
         <form id="recipeForm">
             <label for="ingredients">Ingredients:</label><br>
             <input type="text" id="ingredients" name="ingredients" placeholder="Enter ingredients separated by commas" required><br><br>
@@ -81,16 +85,19 @@
             <button type="button" onclick="generateRecipe()">Generate Recipe</button>
         </form>
         <div id="recipeResult"></div>
+        
+        <form id="photoForm" style="display: none;" enctype="multipart/form-data">
+            <label for="photo">Upload Photo of Dish:</label><br>
+            <input type="file" id="photo" name="photo" accept="image/*"><br><br>
+            <button type="button" onclick="uploadPhoto()">Upload Photo</button>
+        </form>
     </div>
 
     <script>
         function generateRecipe() {
-            const ingredients = document.getElementById('ingredients').value.split(',');
-            const cuisine = document.getElementById('cuisine').value;
-
             const formData = {
-                ingredients: ingredients,
-                cuisine: cuisine
+                ingredients: document.getElementById('ingredients').value.split(','),
+                cuisine: document.getElementById('cuisine').value
             };
 
             fetch('/generate_recipe', {
@@ -106,12 +113,40 @@
                     document.getElementById('recipeResult').innerText = `Error: ${data.error}`;
                 } else {
                     document.getElementById('recipeResult').innerHTML = `<strong>Generated Recipe:</strong><br>${data.recipe}`;
+                    document.getElementById('photoForm').style.display = 'block';
                 }
             })
             .catch((error) => {
                 console.error('Error:', error);
                 document.getElementById('recipeResult').innerText = `Error: ${error.message}`;
             });
+        }
+
+        function uploadPhoto() {
+            const photoInput = document.getElementById('photo');
+            if (photoInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('photo', photoInput.files[0]);
+
+                fetch('/upload_photo', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(`Error: ${data.error}`);
+                    } else {
+                        alert('Photo uploaded successfully!');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert(`Error: ${error.message}`);
+                });
+            } else {
+                alert('Please select a photo to upload.');
+            }
         }
     </script>
 </body>
