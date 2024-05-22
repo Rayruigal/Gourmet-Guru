@@ -130,7 +130,7 @@
         </form>
         
         <div id="photoContainer"></div>
-        <button id="readRecipeButton" style="display: none;" onclick="readRecipe()">Read Recipe Aloud</button>
+        <button id="readRecipeButton" style="display: none;" onclick="toggleReadRecipe()">Read Recipe Aloud</button>
         
         <div id="ratingContainer" style="display: none;">
             <button class="ratingButton" onclick="rateRecipe(1)">1</button>
@@ -143,6 +143,9 @@
     </div>
 
     <script>
+        let isReading = false;
+        let utterance;
+
         function generateRecipe() {
             const formData = {
                 ingredients: document.getElementById('ingredients').value.split(','),
@@ -204,10 +207,22 @@
             }
         }
 
-        function readRecipe() {
-            const recipeText = document.getElementById('recipeResult').innerText;
-            const utterance = new SpeechSynthesisUtterance(recipeText);
-            window.speechSynthesis.speak(utterance);
+        function toggleReadRecipe() {
+            const button = document.getElementById('readRecipeButton');
+            if (isReading) {
+                window.speechSynthesis.cancel();
+                button.innerText = 'Read Recipe Aloud';
+            } else {
+                const recipeText = document.getElementById('recipeResult').innerText;
+                utterance = new SpeechSynthesisUtterance(recipeText);
+                utterance.onend = () => {
+                    isReading = false;
+                    button.innerText = 'Read Recipe Aloud';
+                };
+                window.speechSynthesis.speak(utterance);
+                button.innerText = 'Stop Reading';
+            }
+            isReading = !isReading;
         }
 
         function rateRecipe(rating) {
